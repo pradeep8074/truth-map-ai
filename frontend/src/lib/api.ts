@@ -147,7 +147,27 @@ export interface ContractUpdateRequest {
   unresolved_questions?: UnresolvedQuestion[];
 }
 
-const API_BASE = "/api";
+export interface SystemAIStatus {
+  provider: string;
+  configured: boolean;
+  connection_status: string;
+  model_identifier: string;
+  last_connectivity_check: string;
+  fallback_mode: string;
+  detail: string;
+}
+
+// Configurable production backend URL (e.g. https://your-backend.onrender.com)
+const rawBase = (import.meta as any).env?.VITE_API_BASE_URL || "";
+const API_BASE = rawBase ? `${rawBase.replace(/\/+$/, "")}/api` : "/api";
+
+export async function getSystemAIStatus(): Promise<SystemAIStatus> {
+  const res = await fetch(`${API_BASE}/system/ai-status`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch AI diagnostics: ${res.statusText}`);
+  }
+  return res.json();
+}
 
 export async function createInvestigation(research_question: string, urls: string[] = []): Promise<{ investigation_id: string; status: string; message?: string }> {
   const res = await fetch(`${API_BASE}/investigations`, {

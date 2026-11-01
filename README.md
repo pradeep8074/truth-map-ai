@@ -7,6 +7,8 @@
 [![Vite](https://img.shields.io/badge/Vite-6.0+-646CFF.svg?logo=vite&logoColor=white)](https://vitejs.dev/)
 [![SQLite](https://img.shields.io/badge/SQLite3-WAL_Mode-003B57.svg?logo=sqlite&logoColor=white)](https://sqlite.org/)
 [![Python Tests](https://img.shields.io/badge/Pytest-159_Passed-brightgreen.svg?logo=pytest&logoColor=white)](https://docs.pytest.org/)
+[![Vercel Deployment](https://img.shields.io/badge/Frontend-Vercel-black.svg?logo=vercel&logoColor=white)](DEPLOYMENT.md)
+[![Render Deployment](https://img.shields.io/badge/Backend-Render-46E3B7.svg?logo=render&logoColor=white)](DEPLOYMENT.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
@@ -298,7 +300,34 @@ python scripts/benchmark_performance.py
 
 ---
 
-## 9. Current Limitations & Honest Disclosure
+## 9. Production Cloud Deployment (Vercel + Render)
+
+The project is fully pre-configured for one-click production cloud deployment:
+
+| Layer | Host Platform | Configuration File | Public URL Placeholder |
+| :--- | :--- | :--- | :--- |
+| **Frontend UI** | **Vercel** | `frontend/vercel.json` | `https://truthmap-ai.vercel.app` |
+| **Backend API** | **Render** | `render.yaml` | `https://truthmap-api.onrender.com` |
+| **Database** | **Render Persistent Disk** | Mount: `/var/data` | `truthmap.db` (Persistent SQLite) |
+| **AI Reasoning** | **Google Gemini** | Env: `GEMINI_API_KEY` | Model: `gemini-2.0-flash` |
+
+### Quick Deployment Summary:
+1. **Deploy Backend to Render:**
+   - Root Directory: `backend`
+   - Build Command: `pip install -r requirements.txt`
+   - Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+   - Persistent Disk: Attach `1 GB` mounted at `/var/data` (set `DATABASE_PATH=/var/data/truthmap.db`).
+2. **Deploy Frontend to Vercel:**
+   - Framework: `Vite`
+   - Root Directory: `frontend`
+   - Build Command: `npm run build`
+   - Environment Variable: `VITE_API_BASE_URL=https://your-backend.onrender.com`
+
+*For complete, step-by-step instructions, see the comprehensive [Production Deployment Guide](DEPLOYMENT.md).*
+
+---
+
+## 10. Current Limitations & Honest Disclosure
 
 In accordance with our platform honesty rules:
 1. **Autonomous Web Search Provider:** External search via Tavily API is currently **UNAVAILABLE / BLOCKED BY CONFIGURATION** because no external search key is configured by default. The system honestly reports `UNAVAILABLE` and provides a manual URL submission gateway rather than faking search results.
