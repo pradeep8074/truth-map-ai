@@ -1,0 +1,40 @@
+# Environment & Secrets
+.env
+.env.*
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.local
+*.tsbuildinfo
+
+# Database & logs
+backend/data/*.db
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# Temporary audit text files
+master_audit_prompt*.txt
+all_audit_phases.txt
+audit_docs/
+scratch/
+
+# OS
+.DS_Store
+Thumbs.db

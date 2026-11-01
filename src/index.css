@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    --bg-primary: #0B1220;
+    --bg-secondary: #111B2E;
+    --card-surface: #172338;
+    --accent-blue: #3B82F6;
+    --accent-teal: #14B8A6;
+    --border-color: #263449;
+    --text-primary: #F8FAFC;
+    --text-secondary: #94A3B8;
+  }
+
+  body {
+    color-scheme: dark;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Ensure selects and dropdown option elements always have high-contrast dark backgrounds and crisp, visible text */
+  select {
+    color-scheme: dark;
+    background-color: #111B2E;
+    color: #F8FAFC;
+  }
+
+  option {
+    color-scheme: dark;
+    background-color: #111B2E;
+    color: #F8FAFC;
+  }
+
+  /* Custom subtle dark scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #0B1220;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #263449;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #3B82F6;
+  }
+}
