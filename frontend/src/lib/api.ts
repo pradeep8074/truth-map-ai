@@ -158,8 +158,30 @@ export interface SystemAIStatus {
 }
 
 // Configurable production backend URL (e.g. https://your-backend.onrender.com)
-const rawBase = (import.meta as any).env?.VITE_API_BASE_URL || "";
-const API_BASE = rawBase ? `${rawBase.replace(/\/+$/, "")}/api` : "/api";
+let rawBase = ((import.meta as any).env?.VITE_API_BASE_URL || "").trim().replace(/\/+$/, "");
+if (rawBase.endsWith("/api")) {
+  rawBase = rawBase.slice(0, -4);
+}
+export const API_BASE = rawBase ? `${rawBase}/api` : "/api";
+
+export async function parseResponse<T = any>(res: Response, endpointDescription: string = "API"): Promise<T> {
+  const contentType = res.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    const text = await res.text();
+    if (text.trim().startsWith("<!DOCTYPE") || text.trim().startsWith("<html")) {
+      throw new Error(
+        `API connection error: Received HTML instead of JSON for ${endpointDescription}. ` +
+        `Please ensure VITE_API_BASE_URL is set to 'https://truth-map-ai-3.onrender.com' in Vercel and redeployed.`
+      );
+    }
+    throw new Error(`API returned non-JSON format (${res.status}) for ${endpointDescription}`);
+  }
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ detail: `Server error ${res.status}` }));
+    throw new Error(errorData.detail || errorData.message || `Server returned ${res.status}`);
+  }
+  return res.json();
+}
 
 export async function getSystemAIStatus(): Promise<SystemAIStatus> {
   const res = await fetch(`${API_BASE}/system/ai-status`);
@@ -222,10 +244,7 @@ export async function getInvestigation(id: string): Promise<Investigation> {
 
 export async function listInvestigations(): Promise<Investigation[]> {
   const res = await fetch(`${API_BASE}/investigations`);
-  if (!res.ok) {
-    throw new Error("Failed to list investigations");
-  }
-  return res.json();
+  return parseResponse<Investigation[]>(res, "investigations list");
 }
 
 export async function getInvestigationSources(id: string): Promise<Source[]> {
