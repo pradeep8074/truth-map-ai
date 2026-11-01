@@ -220,51 +220,80 @@ All screenshots below are captured directly from the live application during exe
 
 ## 8. Installation & Quick Start
 
-### Prerequisites
+### Option A: One-Click Windows Launcher (Easiest)
+Simply double-click **`start_all.bat`** in the project root:
+```cmd
+start_all.bat
+```
+*This automatically launches the FastAPI backend (port 8000), Vite frontend (port 5173), and opens your default browser to [http://localhost:5173](http://localhost:5173).*
+
+---
+
+### Option B: One-Click GitHub Upload
+To upload this repository directly to your personal or organization GitHub account in seconds:
+```cmd
+upload_to_github.bat
+```
+*(On Linux/macOS: `./upload_to_github.sh`)*
+*The script automatically verifies git status, stages code cleanly (safely ignoring `.env` and local `.db` files), prompts for your GitHub repo URL, and pushes the `main` branch.*
+
+---
+
+### Option C: Manual Multi-Terminal Setup
+
+#### Prerequisites
 - Python 3.11+
 - Node.js 18.0+
 
-### Step 1: Clone Repository & Configure Environment
-```bash
-git clone https://github.com/your-username/truthmap-ai.git
-cd truthmap-ai
-cp .env.example .env
-```
-
-### Step 2: Install Python Dependencies & Start Backend
+#### Terminal 1: Backend Setup & API Server
 ```bash
 # Set up virtual environment
 python -m venv venv
 source venv/bin/activate  # On Windows: .\venv\Scripts\Activate.ps1
 
-# Install requirements
+# Install Python requirements
 pip install -r requirements.txt
 
 # Start FastAPI backend
-uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload
+python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 *Backend API available at: [http://127.0.0.1:8000](http://127.0.0.1:8000) (Docs: [/docs](http://127.0.0.1:8000/docs))*
 
-### Step 3: Install Frontend Dependencies & Start Client
-Open a separate terminal:
+#### Terminal 2: Frontend Setup & Dev Server
 ```bash
-# Install packages
+# Navigate to frontend
+cd frontend
+
+# Install dependencies & start
 npm install
-
-# Start Vite client
-npm run dev -- --host 127.0.0.1 --port 5173
+npm run dev
 ```
-*Frontend UI available at: [http://127.0.0.1:5173](http://127.0.0.1:5173)*
+*Frontend UI available at: [http://localhost:5173](http://localhost:5173)*
 
-### Step 4: Run Automated Verification Tests
+---
+
+### Option D: Docker Compose Deployment
 ```bash
+# Build and run both backend & frontend
+docker compose up --build
+```
+*Frontend accessible at [http://localhost:5173](http://localhost:5173) and Backend at [http://localhost:8000](http://localhost:8000).*
+
+---
+
+### Automated Verification & Benchmark Testing
+```bash
+# 1. Run Backend Pytest Suite (159 tests)
 python -m pytest backend/tests/ -q
-```
-**Test Result:** `159 passed in ~4 minutes` (100% pass rate across all components).
 
-### Step 5: Execute One-Click CLI Demonstration
-```bash
-python scratch/run_kaveri_demo.py
+# 2. Run Frontend Vitest Suite (55 tests)
+cd frontend && npm test
+
+# 3. Run Kaveri Demo CLI Workflow (C01–C10)
+python scripts/run_kaveri_demo.py
+
+# 4. Run System Performance & Latency Benchmark
+python scripts/benchmark_performance.py
 ```
 
 ---

@@ -302,7 +302,7 @@ describe("Component 08: Decision Intelligence Report Engine", () => {
     );
 
     expect(await screen.findByText("Upstream Data Changed:")).toBeInTheDocument();
-    expect(screen.getByText("Recompile Current Snapshot")).toBeInTheDocument();
+    expect(screen.getByText("Recompile Full")).toBeInTheDocument();
   });
 
   it("triggers report compilation when Compile New Version button is clicked", async () => {
@@ -316,7 +316,7 @@ describe("Component 08: Decision Intelligence Report Engine", () => {
     fireEvent.click(compileBtn);
 
     await waitFor(() => {
-      expect(api.generateInvestigationReport).toHaveBeenCalledWith("inv-rpt-001");
+      expect(api.generateInvestigationReport).toHaveBeenCalledWith("inv-rpt-001", expect.anything());
     });
   });
 });
