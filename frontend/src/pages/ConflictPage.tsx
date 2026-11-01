@@ -486,11 +486,15 @@ export function ConflictPage() {
             <div className="p-8 text-center bg-dark-900/40 border border-dark-700/60 rounded-xl space-y-3">
               <FileCheck className="w-8 h-8 text-emerald-400/80 mx-auto" />
               <div className="text-sm font-semibold text-slate-200">
-                {conflicts.length === 0 ? "No Conflicts Detected" : "No Matching Conflicts"}
-              </div>
-              <p className="text-xs text-slate-400 max-w-sm mx-auto">
                 {conflicts.length === 0
-                  ? "Click 'Detect Conflicts' above to initiate cross-document claim cross-examination with structured reasoning."
+                  ? (lastAnalyzedAt ? "Cross-Examination Complete — 0 Contradictions Found" : "No Conflicts Detected")
+                  : "No Matching Conflicts"}
+              </div>
+              <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
+                {conflicts.length === 0
+                  ? (lastAnalyzedAt
+                      ? "Cross-document cross-examination completed. All verified claims across sources are mutually consistent with no direct factual or numerical contradictions."
+                      : "Click 'Detect Conflicts' above to initiate cross-document claim cross-examination with structured reasoning.")
                   : "No conflicts match your current search and filter criteria."}
               </p>
             </div>

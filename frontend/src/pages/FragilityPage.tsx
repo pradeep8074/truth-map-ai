@@ -5,6 +5,7 @@ import {
   getLatestFragility,
   getFragilityStatus,
   runFragilityAnalysis,
+  analyzeInvestigationSufficiency,
   simulateSensitivity,
   getSensitivityResults,
   getFragilityRecommendations,
@@ -153,6 +154,14 @@ export function FragilityPage() {
     setAnalyzing(true);
     setError(null);
     try {
+      // Ensure baseline sufficiency is evaluated if status indicates prerequisite
+      if (status?.is_indeterminate) {
+        try {
+          await analyzeInvestigationSufficiency(selectedInvId);
+        } catch {
+          // Backend also guarantees auto-initialization
+        }
+      }
       const res = await runFragilityAnalysis(selectedInvId, true);
       setResult(res.result);
       // Reload status, recommendations and simulations
@@ -981,11 +990,11 @@ export function FragilityPage() {
           <div>
             <div className="flex items-center justify-center gap-2 mb-1">
               <h3 className="text-base font-bold text-slate-200">
-                {status?.is_indeterminate ? "Evaluation Status: INDETERMINATE" : "No Fragility Index Evaluated Yet"}
+                {status?.is_indeterminate ? "Evaluation Status: READY TO EVALUATE" : "No Fragility Index Evaluated Yet"}
               </h3>
               {status?.is_indeterminate && (
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-700/60 font-semibold">
-                  PREREQUISITE REQUIRED
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-950 text-sky-300 border border-sky-700/60 font-semibold">
+                  ANALYSIS REQUIRED
                 </span>
               )}
             </div>
@@ -999,7 +1008,7 @@ export function FragilityPage() {
             disabled={analyzing || !selectedInvId}
             className="bg-sky-600 hover:bg-sky-500 text-white text-xs px-5 py-2.5 shadow-md font-medium"
           >
-            {analyzing ? "Evaluating Platform Metrics..." : "Run Fragility Analysis Now"}
+            {analyzing ? "Evaluating Platform Metrics..." : status?.is_indeterminate ? "Initialize Sufficiency & Calculate DFI" : "Run Fragility Analysis Now"}
           </Button>
         </div>
       )}

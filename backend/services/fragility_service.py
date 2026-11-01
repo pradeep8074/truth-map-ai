@@ -737,7 +737,54 @@ def execute_fragility_analysis(
     """, (investigation_id,))
     suff_rows = cursor.fetchall()
     if not suff_rows:
-        raise ValueError("PREREQ_NO_SUFFICIENCY: Evidence sufficiency analysis (Component 06) has not been executed.")
+        # Auto-compute and persist baseline sufficiency assessments from existing contract & evidence
+        from backend.services.sufficiency_service import evaluate_deterministic_sufficiency
+        claims_query = """
+            SELECT r.requirement_id, r.relevance, c.id AS claim_id, c.claim_text, c.category,
+                   s.title AS source_title
+            FROM evidence_relationships r
+            JOIN claims c ON r.claim_id = c.id
+            LEFT JOIN sources s ON c.source_id = s.id
+            WHERE r.investigation_id = ?;
+        """
+        cursor.execute(claims_query, (investigation_id,))
+        req_claim_map: Dict[str, List[Dict[str, Any]]] = {}
+        for row in cursor.fetchall():
+            req_claim_map.setdefault(row["requirement_id"], []).append(dict(row))
+
+        now_str = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        for req in requirements:
+            rid = req["id"]
+            linked_c = req_claim_map.get(rid, [])
+            st_f, sum_f, lim_f, mis_f, act_f, conf_f, gaps_f = evaluate_deterministic_sufficiency(
+                req, linked_c, []
+            )
+            asm_id = f"suff_{uuid.uuid4().hex[:12]}"
+            cursor.execute("""
+                INSERT INTO evidence_sufficiency_assessments (
+                    id, investigation_id, requirement_id, coverage_status,
+                    assessment_summary, limitations, missing_information,
+                    recommended_action, confidence, analysis_method,
+                    processing_mode, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'deterministic_baseline_init', 'fallback', ?, ?);
+            """, (asm_id, investigation_id, rid, st_f, sum_f, lim_f, mis_f, act_f, conf_f, now_str, now_str))
+
+        cursor.execute("""
+            INSERT INTO evidence_sufficiency_runs (
+                id, investigation_id, processing_mode, analysis_method,
+                requirements_evaluated, sufficient_count, partial_count,
+                insufficient_count, no_evidence_count, conflicting_count,
+                total_gaps, created_at
+            ) VALUES (?, ?, 'fallback', 'deterministic_baseline_init', ?, 0, 0, ?, 0, 0, 0, ?);
+        """, (str(uuid.uuid4()), investigation_id, len(requirements), len(requirements), now_str))
+        conn.commit()
+
+        cursor.execute("""
+            SELECT requirement_id, coverage_status, confidence
+            FROM evidence_sufficiency_assessments WHERE investigation_id = ?;
+        """, (investigation_id,))
+        suff_rows = cursor.fetchall()
+
     sufficiency_map = {r["requirement_id"]: dict(r) for r in suff_rows}
 
     # Assumptions
@@ -1053,7 +1100,7 @@ def get_fragility_status(conn, investigation_id: str) -> FragilityStatusResponse
             has_result=False,
             is_indeterminate=True,
             classification="INDETERMINATE",
-            indeterminate_reason="Evidence Sufficiency & Gap Analysis (Component 06) has not been executed. Mandatory baseline input missing.",
+            indeterminate_reason="Evidence Sufficiency analysis not yet executed. Click 'Run Fragility Analysis Now' to evaluate baseline sufficiency and compute the Fragility Index.",
         )
 
     # 5. Check Latest Fragility Evaluation

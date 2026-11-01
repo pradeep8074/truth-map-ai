@@ -654,18 +654,25 @@ async def analyze_investigation_conflicts(conn, investigation_id: str) -> Confli
             detected_conflicts = []
             gemini_completed = False
 
-    # Execute deterministic fallback ONLY if Gemini was skipped or failed
-    if not gemini_completed:
-        processing_mode = "fallback"
-        analysis_method = "deterministic_polar_numerical_scanner"
+    # Execute deterministic fallback if Gemini was skipped or failed OR if Gemini detected 0 conflicts but candidates exist
+    if not gemini_completed or (len(detected_conflicts) == 0 and len(candidate_pairs) > 0):
+        if not gemini_completed:
+            processing_mode = "fallback"
+            analysis_method = "deterministic_polar_numerical_scanner"
+        else:
+            analysis_method = f"gemini_augmented_deterministic:{used_model}"
+
+        existing_pairs = {(c["claim_a_id"], c["claim_b_id"]) for c in detected_conflicts}
 
         for c1, c2, _ in candidate_pairs:
+            ca_id, cb_id = c1["id"], c2["id"]
+            if ca_id > cb_id:
+                ca_id, cb_id = cb_id, ca_id
+            if (ca_id, cb_id) in existing_pairs:
+                continue
+
             fb = compute_fallback_conflict(c1, c2)
             if fb:
-                ca_id, cb_id = c1["id"], c2["id"]
-                if ca_id > cb_id:
-                    ca_id, cb_id = cb_id, ca_id
-
                 detected_conflicts.append({
                     "claim_a_id": ca_id,
                     "claim_b_id": cb_id,
@@ -676,6 +683,7 @@ async def analyze_investigation_conflicts(conn, investigation_id: str) -> Confli
                     "confidence": fb["confidence"],
                     "recommended_action": fb["recommended_action"],
                 })
+                existing_pairs.add((ca_id, cb_id))
 
     # Persist findings in SQLite database
     now = datetime.datetime.now(datetime.timezone.utc).isoformat()
